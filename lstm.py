@@ -10,7 +10,7 @@ mnist = input_data.read_data_sets('/tmp/data/', one_hot=True)
 
 # 学習パラメータ
 learning_rate = 1e-3
-num_epochs    = 30000
+num_epochs    = 10000
 batch_size    = 128
 display_step  = 10
 
@@ -75,6 +75,18 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 optimizer = tf.train.AdamOptimizer(learning_rate)
 train_op  = optimizer.minimize(loss)
 
+# TensorBoard
+writer = tf.summary.FileWriter('log/tensorboard/')
+saver  = tf.train.Saver()
+
+train_loss_summary = tf.summary.scalar('train/loss', loss)
+train_acc_summary  = tf.summary.scalar('train/accuracy', accuracy)
+train_summary_op   = tf.summary.merge([train_loss_summary, train_acc_summary])
+
+test_loss_summary = tf.summary.scalar('test/loss', loss)
+test_acc_summary  = tf.summary.scalar('test/accuracy', accuracy)
+test_summary_op   = tf.summary.merge([test_loss_summary, test_acc_summary])
+
 
 # 計算グラフ起動
 with tf.Session() as sess:
@@ -98,9 +110,18 @@ with tf.Session() as sess:
             train_loss, train_accuracy = sess.run([loss, accuracy], feed_dict={x: batch_x, y: batch_y})
             print('{}      Loss: {:.6f}  Accuracy: {:.6f}'.format(datetime.now(), train_loss, train_accuracy))
 
-    # 評価
-    test_data  = mnist.test.images.reshape((-1, num_steps, num_inputs))
-    test_label = mnist.test.labels
-    test_loss, test_accuracy = sess.run([loss, accuracy], feed_dict={x: test_data, y: test_label})
-    print('\n{}    Test start'.format(datetime.now()))
-    print('{}      Loss: {:.6f}  Accuracy: {:.6f}'.format(datetime.now(), test_loss, test_accuracy))
+            train_summary = sess.run(train_summary_op, feed_dict={x: batch_x, y: batch_y})
+            writer.add_summary(train_summary, epoch)
+
+        # 評価
+        test_data  = mnist.test.images.reshape((-1, num_steps, num_inputs))
+        test_label = mnist.test.labels
+        test_loss, test_accuracy = sess.run([loss, accuracy], feed_dict={x: test_data, y: test_label})
+        print('{}      Loss: {:.6f}  Accuracy: {:.6f}'.format(datetime.now(), test_loss, test_accuracy))
+
+        test_summary = sess.run(test_summary_op, feed_dict={x: test_data, y: test_label})
+        writer.add_summary(test_summary, epoch)
+
+    # モデル保存
+    save_path = saver.save(sess, 'log/model.ckpt')
+    print('\n{}    Model saved at {}'.format(datetime.now(), 'log/model.ckpt'))
