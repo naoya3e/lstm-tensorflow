@@ -1,4 +1,4 @@
-# LSTM TensorFlow
+# exmaple-lstm-tensorFlow
 
 TensorFlowでLSTM(RNN)を実装する練習です.
 
