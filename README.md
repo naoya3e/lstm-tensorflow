@@ -1,6 +1,6 @@
-# exmaple-lstm-tensorFlow
+# exmaple-lstm-tensorflow
 
-TensorFlowでLSTM(RNN)を実装する練習です.
+> A example code to learn tensorflow or lstm
 
 ---
 
